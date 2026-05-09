@@ -411,7 +411,163 @@ const CHALLENGES = [
     correct: [2, 3, 4, 7, 9],
     blockStarts: {0:"BB1", 2:"BB2", 3:"BB3", 4:"BB4", 7:"BB5", 9:"BB6"},
     explanation: "BB1: init.\nBB2: while condition — loops back from BB5 or exits to BB6.\nBB3: inner if — arr[i]==target?\nBB4: found=1; break — exits directly to BB6.\nBB5: i++ — falls back to BB2.\nBB6: printf."
-  }
+  },
+  {
+  title: "simple if",
+  filename: "simple_if.c",
+  intro: "A single conditional branch with code after it.",
+  hint: "The condition ends one block. The body and merge are separate.",
+  lines: [
+    {code: "x = 10;", s:false},
+    {code: "if (x > 5) {", s:false},
+    {code: "    x = x + 1;", s:false},
+    {code: "}", s:true},
+    {code: "printf(\"%d\", x);", s:false},
+  ],
+  correct: [2,4],
+  blockStarts: {0:"BB1",2:"BB2",4:"BB3"},
+  explanation: "Condition branches to body or merge."
+},
+
+{
+  title: "while with if",
+  filename: "while_if.c",
+  intro: "A loop containing a conditional.",
+  hint: "Loop condition and inner condition both create blocks.",
+  lines: [
+    {code: "i = 0;", s:false},
+    {code: "while (i < 10) {", s:false},
+    {code: "    if (i % 2 == 0) {", s:false},
+    {code: "        printf(\"even\");", s:false},
+    {code: "    }", s:true},
+    {code: "    i++;", s:false},
+    {code: "}", s:true},
+    {code: "return 0;", s:false},
+  ],
+  correct: [1,2,3,5,7],
+  blockStarts: {0:"BB1",1:"BB2",2:"BB3",3:"BB4",5:"BB5",7:"BB6"},
+  explanation: "Loop condition, inner condition, branch body, increment, and exit are separate blocks."
+},
+
+{
+  title: "do while",
+  filename: "dowhile.c",
+  intro: "A do-while loop executes body before condition.",
+  hint: "The condition check happens after the body.",
+  lines: [
+    {code: "i = 0;", s:false},
+    {code: "do {", s:false},
+    {code: "    i++;", s:false},
+    {code: "} while (i < 5);", s:false},
+    {code: "printf(\"done\");", s:false},
+  ],
+  correct: [1,2,4],
+  blockStarts: {0:"BB1",1:"BB2",2:"BB3",4:"BB4"},
+  explanation: "Initialization, loop entry, condition check, and exit are separate."
+},
+
+{
+  title: "continue statement",
+  filename: "continue.c",
+  intro: "continue jumps back to the loop condition.",
+  hint: "The continue creates a jump edge.",
+  lines: [
+    {code: "i = 0;", s:false},
+    {code: "while (i < n) {", s:false},
+    {code: "    i++;", s:false},
+    {code: "    if (i == 5) {", s:false},
+    {code: "        continue;", s:false},
+    {code: "    }", s:true},
+    {code: "    sum += i;", s:false},
+    {code: "}", s:true},
+    {code: "return sum;", s:false},
+  ],
+  correct: [1,3,4,6,8],
+  blockStarts: {0:"BB1",1:"BB2",3:"BB3",4:"BB4",6:"BB5",8:"BB6"},
+  explanation: "continue jumps directly to loop condition."
+},
+
+{
+  title: "nested loops",
+  filename: "nested_loops.c",
+  intro: "Two loops create multiple back edges.",
+  hint: "Each loop condition is its own block.",
+  lines: [
+    {code: "i = 0;", s:false},
+    {code: "while (i < n) {", s:false},
+    {code: "    j = 0;", s:false},
+    {code: "    while (j < m) {", s:false},
+    {code: "        sum += j;", s:false},
+    {code: "        j++;", s:false},
+    {code: "    }", s:true},
+    {code: "    i++;", s:false},
+    {code: "}", s:true},
+    {code: "printf(\"%d\", sum);", s:false},
+  ],
+  correct: [1,2,3,4,7,9],
+  blockStarts: {0:"BB1",1:"BB2",2:"BB3",3:"BB4",4:"BB5",7:"BB6",9:"BB7"},
+  explanation: "Outer loop, inner loop, bodies, and exits each create blocks."
+},
+
+{
+  title: "early return",
+  filename: "early_return.c",
+  intro: "A return inside a branch exits immediately.",
+  hint: "A return ends the basic block.",
+  lines: [
+    {code: "if (x < 0) {", s:false},
+    {code: "    return -1;", s:false},
+    {code: "}", s:true},
+    {code: "x = x + 1;", s:false},
+    {code: "return x;", s:false},
+  ],
+  correct: [1,3,4],
+  blockStarts: {0:"BB1",1:"BB2",3:"BB3",4:"BB4"},
+  explanation: "The early return creates a terminating block."
+},
+
+{
+  title: "for with if else",
+  filename: "for_ifelse.c",
+  intro: "A loop body containing two branches.",
+  hint: "The if condition splits control flow inside the loop.",
+  lines: [
+    {code: "for (i = 0; i < n; i++) {", s:false},
+    {code: "    if (arr[i] > 0) {", s:false},
+    {code: "        pos++;", s:false},
+    {code: "    } else {", s:true},
+    {code: "        neg++;", s:false},
+    {code: "    }", s:true},
+    {code: "}", s:true},
+    {code: "printf(\"done\");", s:false},
+  ],
+  correct: [1,2,4,7],
+  blockStarts: {0:"BB1",1:"BB2",2:"BB3",4:"BB4",7:"BB5"},
+  explanation: "Loop header, condition, true branch, false branch, and exit."
+},
+
+{
+  title: "switch statement",
+  filename: "switch.c",
+  intro: "Each case label begins a new block.",
+  hint: "Fallthrough behavior matters in CFGs.",
+  lines: [
+    {code: "switch (x) {", s:false},
+    {code: "case 1:", s:false},
+    {code: "    y = 10;", s:false},
+    {code: "    break;", s:false},
+    {code: "case 2:", s:false},
+    {code: "    y = 20;", s:false},
+    {code: "    break;", s:false},
+    {code: "default:", s:false},
+    {code: "    y = 0;", s:false},
+    {code: "}", s:true},
+    {code: "printf(\"%d\", y);", s:false},
+  ],
+  correct: [1,4,7,10],
+  blockStarts: {0:"BB1",1:"BB2",4:"BB3",7:"BB4",10:"BB5"},
+  explanation: "Each case/default begins a separate basic block."
+}
 ];
 
 let currentRound = 0;
