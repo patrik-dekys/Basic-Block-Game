@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basic Block Identifier — C Flow Diagrams</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0c0d10;
+  --surface: #13141a;
+  --surface2: #1a1c24;
+  --border: #252830;
+  --text: #dde1ee;
+  --muted: #5a6070;
+  --hint: #3a3f50;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+  --c0: #f5c542; --c0bg: #1c1600; --c0b: #3a2d00;
+  --c1: #3dcfa0; --c1bg: #00150d; --c1b: #003322;
+  --c2: #5ba8f5; --c2bg: #001222; --c2b: #002244;
+  --c3: #f07050; --c3bg: #1a0800; --c3b: #3a1500;
+  --c4: #b07cf0; --c4bg: #0e0820; --c4b: #201540;
+  --c5: #70d860; --c5bg: #071200; --c5b: #102800;
+  --c6: #f06080; --c6bg: #1a0010; --c6b: #380020;
+}
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem 5rem;
+}
+header { text-align: center; max-width: 680px; width: 100%; margin-bottom: 2rem; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: var(--c0);
+  margin-bottom: 0.5rem;
+}
+h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 700; line-height: 1.15; }
+h1 em { font-style: normal; color: var(--c0); }
+.tagline { font-size: 14px; color: var(--muted); margin-top: 0.4rem; }
+
+.hud {
+  display: flex; gap: 1rem; align-items: center; justify-content: center;
+  margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.hud-pill {
+  font-family: var(--mono); font-size: 11px;
+  padding: 5px 14px; border-radius: 100px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+}
+.hud-pill b { color: var(--c0); font-weight: 700; }
+
+.progress-bar { max-width: 680px; width: 100%; height: 2px; background: var(--surface2); border-radius: 4px; margin-bottom: 2rem; }
+.progress-fill { height: 100%; background: var(--c0); border-radius: 4px; transition: width 0.5s; }
+
+.card {
+  max-width: 680px; width: 100%;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.card-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.25em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem;
+}
+.challenge-title { font-size: 1.1rem; font-weight: 600; }
+.challenge-intro { font-size: 13px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+
+.instructions {
+  max-width: 680px; width: 100%;
+  font-size: 12px; color: var(--muted);
+  margin-bottom: 0.75rem; text-align: center; line-height: 1.6;
+}
+.instructions span { color: var(--text); }
+
+/* Code panel */
+.code-wrap {
+  max-width: 680px; width: 100%;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem;
+}
+.code-header {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 6px;
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot-r { background: #4a1a1a; }
+.dot-y { background: #3a3010; }
+.dot-g { background: #0e2a14; }
+.code-filename { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-left: 6px; }
+
+.code-body { padding: 8px 0 12px; }
+
+/* Each "row" = optional gap + line */
+.code-row { position: relative; }
+
+.gap-zone {
+  height: 10px; cursor: pointer;
+  display: flex; align-items: center;
+  padding: 0 16px; position: relative;
+}
+.gap-zone:hover .gap-hint { opacity: 1; }
+.gap-hint {
+  position: absolute; left: 54px; right: 16px; height: 1px;
+  background: var(--hint); opacity: 0;
+  transition: opacity 0.15s; border-radius: 1px;
+}
+.gap-hint::before {
+  content: '+ split here';
+  position: absolute; left: 8px; top: -9px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  color: var(--hint); white-space: nowrap;
+}
+.gap-zone.active .gap-hint { opacity: 0; }
+
+/* The visible divider when active */
+.divider-line {
+  display: none; height: 2px;
+  margin: 0; position: relative;
+}
+.divider-line.show { display: block; }
+.divider-line .divider-inner {
+  height: 100%; margin-left: 54px; border-radius: 1px;
+}
+.divider-line .divider-tag {
+  position: absolute; left: 4px; top: -7px;
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.05em; padding: 2px 5px; border-radius: 3px;
+  white-space: nowrap;
+}
+.divider-line .remove-btn {
+  position: absolute; right: 16px; top: -8px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--muted); line-height: 1;
+  transition: background 0.1s;
+}
+.divider-line .remove-btn:hover { background: #3a1010; color: #f06060; }
+
+.code-line {
+  display: flex; align-items: stretch;
+  font-family: var(--mono); font-size: 13.5px;
+  line-height: 1.7; padding: 1px 0;
+  transition: background 0.2s;
+}
+.line-num {
+  width: 40px; min-width: 40px; text-align: right;
+  padding-right: 12px; color: var(--muted);
+  font-size: 11px; padding-top: 2px; user-select: none;
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding-top: 4px;
+}
+.line-bb {
+  width: 8px; min-width: 8px; border-radius: 0 0 0 0;
+  margin-right: 4px; flex-shrink: 0;
+}
+.line-code {
+  padding: 2px 16px 2px 4px; flex: 1;
+  white-space: pre; border-radius: 4px;
+}
+.code-line.structural .line-num { color: #2a2d38; }
+.code-line.structural .line-code { color: #353845; }
+
+/* Syntax colors */
+.kw { color: #c07af0; }
+.fn { color: #5ba8f5; }
+.num { color: #f5c542; }
+.str { color: #70d880; }
+.op { color: #f07050; }
+.cm { color: #3a4055; font-style: italic; }
+.arr { color: #80d0f0; }
+
+/* Actions */
+.actions { max-width: 680px; width: 100%; display: flex; gap: 10px; margin-bottom: 1rem; }
+button {
+  font-family: var(--sans); font-size: 14px; font-weight: 600;
+  border: none; border-radius: 9px; padding: 11px 20px;
+  cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+button:active { transform: scale(0.97); }
+.btn-check { background: var(--c0); color: #111; flex: 1; }
+.btn-check:hover { opacity: 0.9; }
+.btn-check:disabled { opacity: 0.3; cursor: default; }
+.btn-clear { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+.btn-clear:hover { color: var(--text); }
+.btn-next { background: var(--surface2); color: var(--text); border: 1px solid var(--border); flex: 1; display: none; }
+.btn-next:hover { border-color: #444; }
+
+/* Feedback */
+.feedback {
+  max-width: 680px; width: 100%;
+  border-radius: 10px; padding: 14px 16px;
+  font-size: 13px; line-height: 1.6; display: none;
+}
+.feedback.show { display: block; }
+.feedback.pass { background: #071a0f; border: 1px solid #206640; color: #50d080; }
+.feedback.fail { background: #170808; border: 1px solid #602020; color: #e06060; }
+.feedback .expl { color: var(--muted); margin-top: 6px; font-size: 12px; }
+.feedback .diff { margin-top: 8px; font-family: var(--mono); font-size: 11px; }
+.diff-ok  { color: #40d080; }
+.diff-bad { color: #e06060; }
+.diff-mis { color: #f5c542; }
+
+/* Answer mode — locked tiles */
+.code-line.ans-correct .line-code { outline: none; }
+.code-line.ans-wrong .line-code { background: #1c0505 !important; }
+.code-line.ans-missed .line-code { background: #1a1300 !important; }
+
+/* End screen */
+.endscreen {
+  display: none; flex-direction: column; align-items: center;
+  text-align: center; gap: 1rem; max-width: 420px; width: 100%;
+}
+.endscreen.show { display: flex; }
+.end-icon { font-size: 60px; }
+.end-score { font-family: var(--mono); font-size: 3.5rem; font-weight: 700; color: var(--c0); }
+.end-msg { font-size: 14px; color: var(--muted); }
+.btn-restart { background: var(--c0); color: #111; padding: 13px 40px; font-size: 15px; border-radius: 10px; width: 100%; }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Compiler Theory · Flow Graphs</p>
+  <h1>Basic Block <em>Identifier</em></h1>
+  <p class="tagline">Split C code into correct basic blocks for flow diagrams.</p>
+</header>
+
+<div class="hud">
+  <div class="hud-pill">Score <b id="hud-score">0</b></div>
+  <div class="hud-pill" id="hud-round">Round 1 / 6</div>
+  <div class="hud-pill">Streak <b id="hud-streak">0</b></div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+<div id="game">
+  <div class="card">
+    <div class="card-label">Challenge</div>
+    <div class="challenge-title" id="ch-title"></div>
+    <div class="challenge-intro" id="ch-intro"></div>
+  </div>
+
+  <p class="instructions">
+    <span>Click the gaps between lines</span> to add a block boundary (split point).<br>
+    Mark every place where a new basic block begins.
+  </p>
+
+  <div class="code-wrap">
+    <div class="code-header">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <span class="code-filename" id="ch-filename">program.c</span>
+    </div>
+    <div class="code-body" id="code-body"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn-clear" onclick="clearAll()">Clear</button>
+    <button class="btn-check" id="btn-check" onclick="checkAnswer()">Check answer</button>
+    <button class="btn-next" id="btn-next" onclick="nextRound()">Next →</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="endscreen" id="endscreen">
+  <div class="end-icon" id="end-icon">🏆</div>
+  <div class="end-score" id="end-score"></div>
+  <div class="end-msg" id="end-msg"></div>
+  <button class="btn-restart" onclick="startGame()">Play again</button>
+</div>
+
+<script>
+const BLOCK_COLORS = [
+  {c:'var(--c0)',bg:'var(--c0bg)',b:'var(--c0b)'},
+  {c:'var(--c1)',bg:'var(--c1bg)',b:'var(--c1b)'},
+  {c:'var(--c2)',bg:'var(--c2bg)',b:'var(--c2b)'},
+  {c:'var(--c3)',bg:'var(--c3bg)',b:'var(--c3b)'},
+  {c:'var(--c4)',bg:'var(--c4bg)',b:'var(--c4b)'},
+  {c:'var(--c5)',bg:'var(--c5bg)',b:'var(--c5b)'},
+  {c:'var(--c6)',bg:'var(--c6bg)',b:'var(--c6b)'},
+];
+
+const CHALLENGES = [
+  {
+    title: "Simple sequence",
+    filename: "sequence.c",
+    intro: "Pure sequential code — no branches, no loops. How many basic blocks?",
+    hint: "A sequence of statements with no jumps is exactly one basic block.",
+    lines: [
+      {code: "a = 10;",                s: false},
+      {code: "b = a * 2;",             s: false},
+      {code: "c = a + b;",             s: false},
+      {code: "printf(\"%d\", c);",     s: false},
+    ],
+    correct: [],
+    blockStarts: {0: "BB1"},
+    explanation: "All four statements form a single basic block — control flows straight through with no branches."
+  },
+  {
+    title: "if / else",
+    filename: "ifelse.c",
+    intro: "A conditional splits into two branches, then merges. Mark each block boundary.",
+    hint: "The if-condition ends BB1. Each branch is its own block. The code after the merge starts a new block.",
+    lines: [
+      {code: "a = 5;",              s: false},
+      {code: "b = 3;",              s: false},
+      {code: "if (a > b) {",        s: false},
+      {code: "    a = a - b;",      s: false},
+      {code: "} else {",            s: true },
+      {code: "    b = b - a;",      s: false},
+      {code: "}",                   s: true },
+      {code: "printf(\"%d\", a+b);",s: false},
+    ],
+    correct: [3, 5, 7],
+    blockStarts: {0:"BB1", 3:"BB2", 5:"BB3", 7:"BB4"},
+    explanation: "BB1: a=5; b=3; if(a>b) — ends with branch.\nBB2: true branch — a=a-b.\nBB3: false branch — b=b-a.\nBB4: merge point — printf."
+  },
+  {
+    title: "while loop",
+    filename: "while.c",
+    intro: "A while loop creates a back edge — the condition is checked repeatedly.",
+    hint: "The condition check is its own block. The loop body is another. Code after the loop is a third.",
+    lines: [
+      {code: "i = 0;",              s: false},
+      {code: "sum = 0;",            s: false},
+      {code: "while (i < n) {",     s: false},
+      {code: "    sum += i;",       s: false},
+      {code: "    i = i + 1;",      s: false},
+      {code: "}",                   s: true },
+      {code: "printf(\"%d\", sum);",s: false},
+    ],
+    correct: [2, 3, 6],
+    blockStarts: {0:"BB1", 2:"BB2", 3:"BB3", 6:"BB4"},
+    explanation: "BB1: init — i=0; sum=0.\nBB2: loop condition — while(i<n). Has back edge from BB3.\nBB3: loop body — sum+=i; i++.\nBB4: after loop — printf."
+  },
+  {
+    title: "for loop",
+    filename: "forloop.c",
+    intro: "A for loop packs init + condition + increment into one header. Where are the block boundaries?",
+    hint: "The for-header (init + condition) and the body are separate blocks. The increment is usually part of the body block.",
+    lines: [
+      {code: "result = 1;",                  s: false},
+      {code: "for (i = 1; i <= n; i++) {",   s: false},
+      {code: "    result = result * i;",      s: false},
+      {code: "}",                             s: true },
+      {code: "return result;",               s: false},
+    ],
+    correct: [2, 4],
+    blockStarts: {0:"BB1", 2:"BB2", 4:"BB3"},
+    explanation: "BB1: result=1 + for-header (init+condition acts as branch).\nBB2: loop body — result*=i; (i++ is part of the for-header, revisited each iteration).\nBB3: return result — after loop exits."
+  },
+  {
+    title: "nested if",
+    filename: "nested.c",
+    intro: "Each condition is a branch point. Count carefully — nested ifs add more blocks.",
+    hint: "Every if/else if condition ends the current block. Each branch body is its own block.",
+    lines: [
+      {code: "x = read();",             s: false},
+      {code: "if (x > 0) {",            s: false},
+      {code: "    y = x * 2;",          s: false},
+      {code: "} else if (x < 0) {",     s: false},
+      {code: "    y = -x;",             s: false},
+      {code: "} else {",                s: true },
+      {code: "    y = 0;",              s: false},
+      {code: "}",                       s: true },
+      {code: "printf(\"%d\", y);",      s: false},
+    ],
+    correct: [2, 3, 4, 6, 8],
+    blockStarts: {0:"BB1", 2:"BB2", 3:"BB3", 4:"BB4", 6:"BB5", 8:"BB6"},
+    explanation: "BB1: x=read(); if(x>0) — first condition.\nBB2: y=x*2 — first true branch.\nBB3: else if(x<0) — second condition.\nBB4: y=-x — second true branch.\nBB5: y=0 — else branch.\nBB6: printf — merge point."
+  },
+  {
+    title: "loop with break",
+    filename: "break.c",
+    intro: "A break creates an extra exit from the loop — it jumps past the loop condition.",
+    hint: "The if inside the loop ends a block. The break target (after the loop) is a new block.",
+    lines: [
+      {code: "i = 0;",                      s: false},
+      {code: "found = 0;",                  s: false},
+      {code: "while (i < n) {",             s: false},
+      {code: "    if (arr[i] == target) {", s: false},
+      {code: "        found = 1;",          s: false},
+      {code: "        break;",              s: false},
+      {code: "    }",                       s: true },
+      {code: "    i = i + 1;",              s: false},
+      {code: "}",                           s: true },
+      {code: "printf(\"%d\", found);",      s: false},
+    ],
+    correct: [2, 3, 4, 7, 9],
+    blockStarts: {0:"BB1", 2:"BB2", 3:"BB3", 4:"BB4", 7:"BB5", 9:"BB6"},
+    explanation: "BB1: init.\nBB2: while condition — loops back from BB5 or exits to BB6.\nBB3: inner if — arr[i]==target?\nBB4: found=1; break — exits directly to BB6.\nBB5: i++ — falls back to BB2.\nBB6: printf."
+  }
+];
+
+let currentRound = 0;
+let score = 0;
+let streak = 0;
+let userDividers = new Set();
+let answered = false;
+let shuffled = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function highlight(code) {
+  const keywords = /\b(if|else|while|for|return|break|continue|int|float|char|void)\b/g;
+  const escaped = code
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return escaped
+    .replace(keywords, '<span class="kw">$1</span>')
+    .replace(/\b(printf|scanf|read|print)\b/g, '<span class="fn">$1</span>')
+    .replace(/\b(\d+)\b/g, '<span class="num">$1</span>')
+    .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
+    .replace(/\barr\b/g, '<span class="arr">arr</span>');
+}
+
+function getBlockIndex(lineIdx) {
+  let block = 0;
+  for (let i = 1; i <= lineIdx; i++) {
+    if (userDividers.has(i)) block++;
+  }
+  return block;
+}
+
+function colorForBlock(idx) { return BLOCK_COLORS[idx % BLOCK_COLORS.length]; }
+
+function renderCode(ch, locked = false) {
+  const body = document.getElementById('code-body');
+  body.innerHTML = '';
+  const n = ch.lines.length;
+
+  for (let i = 0; i < n; i++) {
+    // Gap zone before this line (not before line 0)
+    if (i > 0) {
+      const gapRow = document.createElement('div');
+      gapRow.className = 'code-row';
+      gapRow.innerHTML = `
+        <div class="gap-zone${userDividers.has(i) ? ' active' : ''}" data-i="${i}" onclick="${locked ? '' : `toggleDivider(${i})`}" style="${locked ? 'cursor:default;' : ''}">
+          <div class="gap-hint"></div>
+        </div>
+        <div class="divider-line${userDividers.has(i) ? ' show' : ''}" id="div-line-${i}">
+          <div class="divider-inner"></div>
+          <div class="divider-tag"></div>
+          ${locked ? '' : `<div class="remove-btn" onclick="toggleDivider(${i})">✕</div>`}
+        </div>`;
+      body.appendChild(gapRow);
+    }
+
+    const lineRow = document.createElement('div');
+    const blockIdx = getBlockIndex(i);
+    const col = colorForBlock(blockIdx);
+    lineRow.className = `code-line${ch.lines[i].s ? ' structural' : ''}`;
+    lineRow.id = `line-row-${i}`;
+
+    const bgColor = ch.lines[i].s ? 'transparent' : col.bg;
+    lineRow.innerHTML = `
+      <span class="line-num">${i+1}</span>
+      <span class="line-bb" style="background:${ch.lines[i].s ? 'transparent' : col.c};opacity:0.4;"></span>
+      <span class="line-code" style="background:${bgColor};">${highlight(ch.lines[i].code)}</span>`;
+    body.appendChild(lineRow);
+  }
+
+  // Update all divider colors and labels
+  updateDividerColors(ch);
+}
+
+function updateDividerColors(ch) {
+  const dividers = [...userDividers].sort((a,b)=>a-b);
+  dividers.forEach((i, di) => {
+    const dl = document.getElementById(`div-line-${i}`);
+    if (!dl) return;
+    const blockIdx = getBlockIndex(i);
+    const col = colorForBlock(blockIdx);
+    const inner = dl.querySelector('.divider-inner');
+    const tag = dl.querySelector('.divider-tag');
+    if (inner) inner.style.background = col.c;
+    if (tag) {
+      tag.textContent = `BB${blockIdx+1}`;
+      tag.style.background = col.b;
+      tag.style.color = col.c;
+    }
+  });
+  // Also color all line-bb spans
+  const ch2 = shuffled[currentRound];
+  document.querySelectorAll('.code-line').forEach((row, ri) => {
+    const lineIdx = parseInt(row.id.split('-')[2]);
+    if (isNaN(lineIdx)) return;
+    const blockIdx = getBlockIndex(lineIdx);
+    const col = colorForBlock(blockIdx);
+    const bb = row.querySelector('.line-bb');
+    const lc = row.querySelector('.line-code');
+    const struct = ch2.lines[lineIdx]?.s;
+    if (bb) bb.style.background = struct ? 'transparent' : col.c;
+    if (lc) lc.style.background = struct ? 'transparent' : col.bg;
+  });
+}
+
+function toggleDivider(i) {
+  if (answered) return;
+  if (userDividers.has(i)) {
+    userDividers.delete(i);
+  } else {
+    userDividers.add(i);
+  }
+  renderCode(shuffled[currentRound]);
+}
+
+function clearAll() {
+  if (answered) return;
+  userDividers.clear();
+  renderCode(shuffled[currentRound]);
+}
+
+function checkAnswer() {
+  answered = true;
+  const ch = shuffled[currentRound];
+  const correct = new Set(ch.correct);
+  const user = new Set(userDividers);
+
+  const correctPicks = [...user].filter(i => correct.has(i));
+  const wrongPicks = [...user].filter(i => !correct.has(i));
+  const missed = [...correct].filter(i => !user.has(i));
+  const perfect = wrongPicks.length === 0 && missed.length === 0;
+
+  if (perfect) { score++; streak++; }
+  else { streak = 0; }
+
+  // Render locked version with answer overlay
+  renderCode(ch, true);
+
+  // Show correct answer dividers in green, wrong in red
+  // First add any missing correct dividers (shown as missed)
+  const allDividerPositions = new Set([...user, ...correct]);
+  allDividerPositions.forEach(i => {
+    const dl = document.getElementById(`div-line-${i}`);
+    if (!dl) return;
+    dl.classList.add('show');
+    const inner = dl.querySelector('.divider-inner');
+    const tag = dl.querySelector('.divider-tag');
+    if (correct.has(i) && user.has(i)) {
+      // Correct
+      inner.style.background = '#3dcfa0';
+      tag.style.background = '#003322'; tag.style.color = '#3dcfa0';
+      tag.textContent = '✓ ' + (ch.blockStarts[i] || '');
+    } else if (user.has(i) && !correct.has(i)) {
+      // Wrong
+      inner.style.background = '#f07070';
+      tag.style.background = '#2a0808'; tag.style.color = '#f07070';
+      tag.textContent = '✗ wrong';
+    } else if (correct.has(i) && !user.has(i)) {
+      // Missed
+      inner.style.background = '#f5c542';
+      tag.style.background = '#2a2000'; tag.style.color = '#f5c542';
+      tag.textContent = '! missed ' + (ch.blockStarts[i] || '');
+    }
+  });
+
+  // Feedback
+  const fb = document.getElementById('feedback');
+  const expl = ch.explanation.replace(/\n/g, '<br>');
+  if (perfect) {
+    fb.className = 'feedback pass show';
+    fb.innerHTML = `✓ Correct! ${ch.correct.length === 0 ? 'No splits needed — this is one basic block.' : `${correct.size} block boundar${correct.size===1?'y':'ies'} placed perfectly.`}<div class="expl">${expl}</div>`;
+  } else {
+    let diffs = '';
+    if (wrongPicks.length) diffs += `<span class="diff-bad">✗ Wrong splits at line${wrongPicks.length>1?'s':''}: ${wrongPicks.map(i=>i+1).join(', ')}</span><br>`;
+    if (missed.length)     diffs += `<span class="diff-mis">! Missed splits before line${missed.length>1?'s':''}: ${missed.map(i=>i+1).join(', ')}</span>`;
+    fb.className = 'feedback fail show';
+    fb.innerHTML = `✗ Not quite.<div class="diff">${diffs}</div><div class="expl">${expl}</div>`;
+  }
+
+  updateHUD();
+  document.getElementById('btn-check').style.display = 'none';
+  const btnNext = document.getElementById('btn-next');
+  btnNext.style.display = 'flex';
+  btnNext.textContent = currentRound + 1 < shuffled.length ? 'Next →' : 'See results →';
+}
+
+function nextRound() {
+  currentRound++;
+  if (currentRound >= shuffled.length) {
+    showEnd(); return;
+  }
+  answered = false;
+  userDividers.clear();
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('btn-check').style.display = 'flex';
+  document.getElementById('btn-next').style.display = 'none';
+  loadRound();
+}
+
+function loadRound() {
+  const ch = shuffled[currentRound];
+  document.getElementById('ch-title').textContent = ch.title;
+  document.getElementById('ch-intro').textContent = ch.intro;
+  document.getElementById('ch-filename').textContent = ch.filename;
+  document.getElementById('hud-round').textContent = `Round ${currentRound+1} / ${shuffled.length}`;
+  document.getElementById('progress').style.width = `${(currentRound/shuffled.length)*100}%`;
+  renderCode(ch);
+}
+
+function updateHUD() {
+  document.getElementById('hud-score').textContent = score;
+  document.getElementById('hud-streak').textContent = streak;
+}
+
+function showEnd() {
+  document.getElementById('game').style.display = 'none';
+  document.getElementById('endscreen').classList.add('show');
+  document.getElementById('progress').style.width = '100%';
+  const total = shuffled.length;
+  const pct = Math.round(score/total*100);
+  document.getElementById('end-score').textContent = `${score} / ${total}`;
+  let icon='🏆', msg='';
+  if (pct===100) { icon='🏆'; msg='Perfect — you understand basic blocks completely!'; }
+  else if (pct>=66) { icon='🎯'; msg='Good intuition — just a few edge cases to review.'; }
+  else if (pct>=33) { icon='📖'; msg='Keep practicing — focus on loop conditions and merge points.'; }
+  else              { icon='💡'; msg='Review how branches and loops create block boundaries.'; }
+  document.getElementById('end-icon').textContent = icon;
+  document.getElementById('end-msg').textContent = msg;
+}
+
+function startGame() {
+  score = 0; streak = 0; currentRound = 0;
+  answered = false; userDividers.clear();
+  shuffled = shuffle(CHALLENGES);
+  document.getElementById('endscreen').classList.remove('show');
+  document.getElementById('game').style.display = 'block';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('btn-check').style.display = 'flex';
+  document.getElementById('btn-next').style.display = 'none';
+  updateHUD();
+  loadRound();
+}
+
+startGame();
+</script>
+</body>
+</html>
