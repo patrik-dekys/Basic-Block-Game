@@ -123,6 +123,14 @@ h1 em { font-style: normal; color: var(--c0); }
 }
 .gap-zone.active .gap-hint { opacity: 0; }
 
+.line-code {
+  padding: 2px 16px 2px 4px;
+  flex: 1;
+  white-space: pre-wrap;
+  font-family: var(--mono);
+  border-radius: 4px;
+}
+
 /* The visible divider when active */
 .divider-line {
   display: none; height: 2px;
@@ -149,11 +157,14 @@ h1 em { font-style: normal; color: var(--c0); }
 .divider-line .remove-btn:hover { background: #3a1010; color: #f06060; }
 
 .code-line {
-  display: flex; align-items: stretch;
-  font-family: var(--mono); font-size: 13.5px;
-  line-height: 1.7; padding: 1px 0;
-  transition: background 0.2s;
+  display: flex;
+  align-items: flex-start;
+  font-family: var(--mono);
+  font-size: 13.5px;
+  line-height: 1.7;
+  padding: 1px 0;
 }
+  
 .line-num {
   width: 40px; min-width: 40px; text-align: right;
   padding-right: 12px; color: var(--muted);
@@ -427,45 +438,43 @@ function esc(s) {
 }
 
 function highlight(code) {
-  let out = '', i = 0;
-  while (i < code.length) {
-    const ch = code[i];
-    // String literal
-    if (ch === '"') {
-      let j = i + 1;
-      while (j < code.length && code[j] !== '"') j++;
-      out += `<span class="str">${esc(code.slice(i, j+1))}</span>`;
-      i = j + 1; continue;
-    }
-    // Char literal
-    if (ch === "'") {
-      let j = i + 1;
-      while (j < code.length && code[j] !== "'") j++;
-      out += `<span class="str">${esc(code.slice(i, j+1))}</span>`;
-      i = j + 1; continue;
-    }
-    // Identifier / keyword
-    if (/[a-zA-Z_]/.test(ch)) {
-      let j = i;
-      while (j < code.length && /[a-zA-Z0-9_]/.test(code[j])) j++;
-      const word = code.slice(i, j);
-      if (KW.has(word))      out += `<span class="kw">${word}</span>`;
-      else if (FN.has(word)) out += `<span class="fn">${word}</span>`;
-      else if (word === 'arr') out += `<span class="arr">${word}</span>`;
-      else                   out += esc(word);
-      i = j; continue;
-    }
-    // Number
-    if (/[0-9]/.test(ch)) {
-      let j = i;
-      while (j < code.length && /[0-9]/.test(code[j])) j++;
-      out += `<span class="num">${code.slice(i,j)}</span>`;
-      i = j; continue;
-    }
-    out += esc(ch);
-    i++;
-  }
-  return out;
+  // Escape HTML FIRST
+  code = code
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  // Strings
+  code = code.replace(
+    /"(.*?)"/g,
+    '<span class="str">"$1"</span>'
+  );
+
+  // Numbers
+  code = code.replace(
+    /\b(\d+)\b/g,
+    '<span class="num">$1</span>'
+  );
+
+  // Keywords
+  code = code.replace(
+    /\b(if|else|while|for|return|break|continue|int|float|char|void|do)\b/g,
+    '<span class="kw">$1</span>'
+  );
+
+  // Functions
+  code = code.replace(
+    /\b(printf|scanf|read|print)\b/g,
+    '<span class="fn">$1</span>'
+  );
+
+  // Array identifier
+  code = code.replace(
+    /\b(arr)\b/g,
+    '<span class="arr">$1</span>'
+  );
+
+  return code;
 }
 
 function getBlockIndex(lineIdx) {
