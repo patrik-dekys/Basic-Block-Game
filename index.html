@@ -419,16 +419,53 @@ function shuffle(arr) {
   return a;
 }
 
+const KW = new Set(['if','else','while','for','return','break','continue','int','float','char','void','do']);
+const FN = new Set(['printf','scanf','read','print']);
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function highlight(code) {
-  const keywords = /\b(if|else|while|for|return|break|continue|int|float|char|void)\b/g;
-  const escaped = code
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return escaped
-    .replace(keywords, '<span class="kw">$1</span>')
-    .replace(/\b(printf|scanf|read|print)\b/g, '<span class="fn">$1</span>')
-    .replace(/\b(\d+)\b/g, '<span class="num">$1</span>')
-    .replace(/"([^"]*)"/g, '<span class="str">"$1"</span>')
-    .replace(/\barr\b/g, '<span class="arr">arr</span>');
+  let out = '', i = 0;
+  while (i < code.length) {
+    const ch = code[i];
+    // String literal
+    if (ch === '"') {
+      let j = i + 1;
+      while (j < code.length && code[j] !== '"') j++;
+      out += `<span class="str">${esc(code.slice(i, j+1))}</span>`;
+      i = j + 1; continue;
+    }
+    // Char literal
+    if (ch === "'") {
+      let j = i + 1;
+      while (j < code.length && code[j] !== "'") j++;
+      out += `<span class="str">${esc(code.slice(i, j+1))}</span>`;
+      i = j + 1; continue;
+    }
+    // Identifier / keyword
+    if (/[a-zA-Z_]/.test(ch)) {
+      let j = i;
+      while (j < code.length && /[a-zA-Z0-9_]/.test(code[j])) j++;
+      const word = code.slice(i, j);
+      if (KW.has(word))      out += `<span class="kw">${word}</span>`;
+      else if (FN.has(word)) out += `<span class="fn">${word}</span>`;
+      else if (word === 'arr') out += `<span class="arr">${word}</span>`;
+      else                   out += esc(word);
+      i = j; continue;
+    }
+    // Number
+    if (/[0-9]/.test(ch)) {
+      let j = i;
+      while (j < code.length && /[0-9]/.test(code[j])) j++;
+      out += `<span class="num">${code.slice(i,j)}</span>`;
+      i = j; continue;
+    }
+    out += esc(ch);
+    i++;
+  }
+  return out;
 }
 
 function getBlockIndex(lineIdx) {
